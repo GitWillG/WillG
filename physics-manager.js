@@ -38,8 +38,8 @@ const _makePhysicsObject = (physicsId, position, quaternion, scale) => {
   physicsObject.updateMatrixWorld()
   physicsObject.physicsId = physicsId
   physicsObject.detached = false // detached physics objects do not get updated when the owning app moves
-  physicsObject.collided = false
-  physicsObject.grounded = false
+  physicsObject.collided = true
+  physicsObject.grounded = true
   return physicsObject
 }
 const _extractPhysicsGeometryForId = (physicsId) => {
@@ -166,6 +166,10 @@ physicsManager.addGeometry = (mesh) => {
   physicsObject.physicsMesh = physicsMesh
   return physicsObject
 }
+physicsManager.createMaterial = physicsMaterial =>
+  physx.physxWorker.createMaterial(physx.physics, physicsMaterial);
+physicsManager.destroyMaterial = materialAddress =>
+  physx.physxWorker.destroyMaterial(physx.physics, materialAddress);
 physicsManager.cookGeometry = (mesh) =>
   physx.physxWorker.cookGeometryPhysics(physx.physics, mesh)
 physicsManager.addCookedGeometry = (buffer, position, quaternion, scale) => {
@@ -351,6 +355,9 @@ physicsManager.setTransform = (physicsObject, autoWake) => {
     autoWake
   )
 }
+physicsManager.setGeometryScale = (physicsId, newScale) => {
+  physx.physxWorker.setGeometryScale(physx.physics, physicsId, newScale);
+}
 physicsManager.getPath = (
   start,
   dest,
@@ -505,12 +512,11 @@ physicsManager.cutMesh = (
   numNormals,
   uvs,
   numUvs,
-  faces,
+  faces, // Set to falsy to indicate that this is an non-indexed geometry
   numFaces,
 
-  position,
-  quaternion,
-  scale
+  planeNormal, // normalized vector3 array
+  planeDistance, // number
 ) =>
   physx.physxWorker.doCut(
     positions,
@@ -522,9 +528,8 @@ physicsManager.cutMesh = (
     faces,
     numFaces,
 
-    position,
-    quaternion,
-    scale
+    planeNormal,
+    planeDistance,
   )
 physicsManager.setLinearLockFlags = (physicsId, x, y, z) => {
   physx.physxWorker.setLinearLockFlags(physx.physics, physicsId, x, y, z)
@@ -581,7 +586,7 @@ physicsManager.simulatePhysics = (timeDiff) => {
 physicsManager.marchingCubes = (dims, potential, shift, scale) =>
   physx.physxWorker.marchingCubes(dims, potential, shift, scale)
 
-physicsManager.createChunkWithDualContouring = (x, y, z) => physx.physxWorker.createChunkWithDualContouring(x, y, z)
+physicsManager.createChunkWithDualContouring = (x, y, z, lod) => physx.physxWorker.createChunkWithDualContouring(x, y, z, lod)
 
 physicsManager.createSeamsWithDualContouring = (x, y, z) => physx.physxWorker.createSeamsWithDualContouring(x, y, z)
 
